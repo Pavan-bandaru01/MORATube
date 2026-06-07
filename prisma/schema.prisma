@@ -1,12 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  extensions = [pgvector]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -85,7 +84,7 @@ model Video {
 }
 
 model Document {
-  id            String      @id @default(cuid())
+  id            String     @id @default(cuid())
   title         String
   author        String?
   description   String?
@@ -94,16 +93,16 @@ model Document {
   coverUrl      String?
   fileType      String
   pageCount     Int?
-  category      Category    @default(FINANCE)
+  category      Category   @default(FINANCE)
   tags          String[]
-  visibility    Visibility  @default(PUBLIC)
-  views         Int         @default(0)
+  visibility    Visibility @default(PUBLIC)
+  views         Int        @default(0)
   uploadedBy    String
   channelName   String
-  extractedText String?     @db.Text
+  extractedText String?    @db.Text
   aiSummary     String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 model Notification {
@@ -138,7 +137,7 @@ model AITool {
   name        String
   category    String
   description String
-  useCases    String   // Stored as JSON string or comma-separated
+  useCases    String
   pricing     String
   iconColor   String
   iconBg      String
@@ -151,7 +150,7 @@ model Post {
   title       String
   content     String
   imageUrl    String?
-  uploadedBy  String   // UserProfile.id
+  uploadedBy  String
   channelName String
   likes       Int      @default(0)
   createdAt   DateTime @default(now())
