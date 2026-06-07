@@ -1,0 +1,171 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector]
+}
+
+enum UserRole {
+  VIEWER
+  CREATOR
+  MODERATOR
+  ADMIN
+}
+
+enum Visibility {
+  PUBLIC
+  UNLISTED
+  PRIVATE
+}
+
+enum Category {
+  ALL
+  MONEY_AWARENESS
+  AI_TOOLS
+  FINANCE
+  INVESTING
+  DEBT_ESCAPE
+  STUDENT_GROWTH
+  TECHNOLOGY
+  MOTIVATION
+}
+
+enum NotifType {
+  NEW_VIDEO
+  NEW_DOCUMENT
+  NEW_FOLLOWER
+  COMMENT
+  LIKE
+  SYSTEM
+}
+
+enum ContentType {
+  VIDEO
+  SHORT
+  DOCUMENT
+  BOOK
+}
+
+model UserProfile {
+  id          String   @id
+  username    String   @unique
+  displayName String
+  avatarUrl   String?
+  bio         String?
+  role        UserRole @default(VIEWER)
+  followers   String[]
+  following   String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Video {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  cloudinaryId String
+  videoUrl     String
+  thumbnailUrl String
+  duration     Int?
+  category     Category    @default(FINANCE)
+  tags         String[]
+  visibility   Visibility  @default(PUBLIC)
+  contentType  ContentType @default(VIDEO)
+  views        Int         @default(0)
+  likes        Int         @default(0)
+  uploadedBy   String
+  channelName  String
+  aiSummary    String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Document {
+  id            String      @id @default(cuid())
+  title         String
+  author        String?
+  description   String?
+  cloudinaryId  String
+  fileUrl       String
+  coverUrl      String?
+  fileType      String
+  pageCount     Int?
+  category      Category    @default(FINANCE)
+  tags          String[]
+  visibility    Visibility  @default(PUBLIC)
+  views         Int         @default(0)
+  uploadedBy    String
+  channelName   String
+  extractedText String?     @db.Text
+  aiSummary     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      NotifType
+  title     String
+  message   String
+  link      String?
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
+
+model SearchLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  query     String
+  results   Int
+  createdAt DateTime @default(now())
+}
+
+model WatchHistory {
+  id          String      @id @default(cuid())
+  userId      String
+  contentId   String
+  contentType ContentType
+  watchedAt   DateTime    @default(now())
+}
+
+model AITool {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  description String
+  useCases    String   // Stored as JSON string or comma-separated
+  pricing     String
+  iconColor   String
+  iconBg      String
+  url         String
+  createdAt   DateTime @default(now())
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  imageUrl    String?
+  uploadedBy  String   // UserProfile.id
+  channelName String
+  likes       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  text        String
+  userId      String
+  displayName String
+  avatarUrl   String?
+  videoId     String?
+  documentId  String?
+  postId      String?
+  createdAt   DateTime @default(now())
+}
