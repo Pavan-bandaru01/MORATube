@@ -1,46 +1,28 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
 
 export async function GET() {
   try {
     const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    let profile = await prisma.userProfile.findUnique({
-      where: { id: userId },
-    });
+    let profile = await db.userProfile.findUnique({ where: { id: userId } });
 
     if (!profile) {
-      const user = await currentUser();
-      const username =
-        user?.username ||
-        user?.emailAddresses[0]?.emailAddress?.split("@")[0] ||
-        userId;
-      const displayName =
-        [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-        username;
-
-      profile = await prisma.userProfile.create({
+      profile = await db.userProfile.create({
         data: {
           id: userId,
-          username,
-          displayName,
-          avatarUrl: user?.imageUrl,
+          username: userId,
+          displayName: "User",
           role: "VIEWER",
-          followers: [],
-          following: [],
         },
       });
     }
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({ role: profile.role, profile });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch user role";
-    console.error("[USER_ROLE_GET]", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[USER_ROLE]", error);
+    return NextResponse.json({ error: "Failed to fetch role" }, { status: 500 });
   }
 }
