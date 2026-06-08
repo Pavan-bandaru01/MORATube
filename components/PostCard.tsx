@@ -1,7 +1,37 @@
+"use client";
+
 import { Heart, MessageSquare, Share2, MoreHorizontal } from "lucide-react";
 import type { Post } from "@/types";
+import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 export default function PostCard({ post }: { post: Post }) {
+  const { isSignedIn } = useUser();
+  const [likes, setLikes] = useState(post.likes);
+  const [isLiking, setIsLiking] = useState(false);
+
+  const handleLike = async () => {
+    if (!isSignedIn) {
+      alert("Please sign in to like posts");
+      return;
+    }
+
+    try {
+      setIsLiking(true);
+      const res = await fetch(`/api/community/posts/${post.id}/like`, {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        setLikes(likes + 1);
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
   return (
     <div className="glass rounded-2xl p-5 transition-colors hover:bg-white/[0.07]">
       <div className="flex justify-between items-start mb-4">
@@ -40,11 +70,15 @@ export default function PostCard({ post }: { post: Post }) {
       )}
 
       <div className="flex items-center gap-6 pt-4 border-t border-white/5">
-        <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 transition group">
+        <button
+          onClick={handleLike}
+          disabled={isLiking}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 transition group disabled:opacity-50"
+        >
           <div className="p-1.5 rounded-full group-hover:bg-red-500/10 transition">
             <Heart className="w-5 h-5 group-hover:fill-red-400/20" />
           </div>
-          <span className="font-medium">{post.likes}</span>
+          <span className="font-medium">{likes}</span>
         </button>
 
         <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-400 transition group">

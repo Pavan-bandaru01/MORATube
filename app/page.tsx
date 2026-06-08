@@ -1,74 +1,119 @@
+"use client";
+
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { ContentType, Visibility } from "@prisma/client";
-import { resolveCategoryParam } from "@/lib/category-map";
-import { categories } from "@/data/categories";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TrendingUp, PlayCircle, Sparkles } from "lucide-react";
 import VideoCard from "@/components/VideoCard";
 import Footer from "@/components/Footer";
-import { getShorts } from "@/lib/actions";
+import { useEffect, useState } from "react";
+import { categories } from "@/data/categories";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>;
-}) {
-  const resolvedParams = await searchParams;
-  const categoryParam = resolvedParams.category;
-  const prismaCategory = resolveCategoryParam(categoryParam);
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+  views: number;
+  likes: number;
+  duration: string;
+  uploadDate: string;
+  tags: string[];
+  visibility: string;
+  isShort: boolean;
+  creator: {
+    name: string;
+    username: string;
+    avatar: string;
+    title: string;
+    subscribers: string;
+    bio: string;
+    bannerGradient: string;
+  };
+  comments: any[];
+}
 
-  const allVideos = await prisma.video.findMany({
-    where: {
-      visibility: Visibility.PUBLIC,
-      contentType: ContentType.VIDEO,
-      ...(prismaCategory ? { category: prismaCategory } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-  });
+interface Short {
+  id: string;
+  title: string;
+  category: string;
+  views: number;
+  likes: number;
+  comments: number;
+  duration: string;
+  gradient: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  creator: {
+    name: string;
+    username: string;
+    avatar: string;
+    title: string;
+    subscribers: string;
+    bio: string;
+    bannerGradient: string;
+  };
+}
+
+export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
+  const [allVideos, setAllVideos] = useState<Video[]>([]);
+  const [allShorts, setAllShorts] = useState<Short[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch videos based on category
+        let videoUrl = "/api/videos";
+        if (categoryParam && categoryParam !== "ALL") {
+          videoUrl += `?category=${categoryParam}`;
+        }
+
+        const [videosRes, shortsRes] = await Promise.all([
+          fetch(videoUrl),
+          fetch("/api/shorts"),
+        ]);
+
+        if (videosRes.ok) {
+          const videosData = await videosRes.json();
+          setAllVideos(videosData.videos || []);
+        }
+
+        if (shortsRes.ok) {
+          const shortsData = await shortsRes.json();
+          setAllShorts(shortsData.shorts || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [categoryParam]);
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (categoryId === "all") {
+      router.push("/");
+    } else {
+      const enumValue = categoryId.toUpperCase().replace(/-/g, "_");
+      router.push(`/?category=${enumValue}`);
+    }
+  };
 
   const mustWatchVideos = [...allVideos]
     .sort((a, b) => b.views - a.views)
     .slice(0, 6);
 
-  const allShorts = await getShorts();
   const featuredShorts = allShorts.slice(0, 5);
-
-  const formatDuration = (seconds: number | null) => {
-    if (!seconds) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const mapToCard = (v: (typeof allVideos)[0]) => ({
-    id: v.id,
-    title: v.title,
-    description: v.description || "",
-    category: v.category,
-    thumbnailUrl: v.thumbnailUrl,
-    videoUrl: v.videoUrl,
-    views: v.views,
-    likes: v.likes,
-    duration: formatDuration(v.duration),
-    uploadDate: new Date(v.createdAt).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-    tags: v.tags,
-    isShort: false,
-    visibility: v.visibility,
-    creator: {
-      name: v.channelName,
-      username: v.uploadedBy,
-      avatar: v.channelName[0] || "U",
-      title: "Creator",
-      subscribers: "0",
-      bio: "",
-      bannerGradient: "from-red-900 to-black",
-    },
-    comments: [],
-  });
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-[#0A0A0A]">
@@ -81,23 +126,15 @@ export default async function Home({
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {categories.map((category) => {
-              const enumValue =
-                category.id === "all"
-                  ? "ALL"
-                  : category.id.toUpperCase().replace(/-/g, "_");
-              const href =
-                category.id === "all" ? "/" : `/?category=${enumValue}`;
               const isActive =
                 category.id === "all"
                   ? !categoryParam || categoryParam === "ALL"
-                  : categoryParam === enumValue ||
-                    categoryParam === category.slug ||
-                    categoryParam === category.id;
+                  : categoryParam === category.id.toUpperCase().replace(/-/g, "_");
 
               return (
-                <Link
+                <button
                   key={category.id}
-                  href={href}
+                  onClick={() => handleCategoryClick(category.id)}
                   className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition flex items-center gap-2 border ${
                     isActive
                       ? "bg-[#E53935] text-white border-[#E53935]"
@@ -106,7 +143,7 @@ export default async function Home({
                 >
                   <span>{category.icon}</span>
                   {category.name}
-                </Link>
+                </button>
               );
             })}
           </div>
@@ -124,10 +161,14 @@ export default async function Home({
               View All
             </Link>
           </div>
-          {mustWatchVideos.length > 0 ? (
+          {isLoading ? (
+            <div className="bg-[#141414] border border-[#2C2C2C] rounded-2xl p-12 text-center">
+              <p className="text-[#999999]">Loading...</p>
+            </div>
+          ) : mustWatchVideos.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
               {mustWatchVideos.map((video) => (
-                <VideoCard key={video.id} video={mapToCard(video)} />
+                <VideoCard key={video.id} video={video} />
               ))}
             </div>
           ) : (
@@ -144,7 +185,7 @@ export default async function Home({
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {allVideos.slice(0, 8).map((video) => (
-                <VideoCard key={video.id} video={mapToCard(video)} />
+                <VideoCard key={video.id} video={video} />
               ))}
             </div>
           </section>

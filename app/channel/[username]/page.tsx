@@ -1,10 +1,43 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getPosts, getShorts, getUserVideos } from "@/lib/actions";
+import { ContentType, Visibility } from "@prisma/client";
 import VideoCard from "@/components/VideoCard";
-import PostCard from "@/components/PostCard";
-import { BellRing, PlaySquare, MonitorPlay, MessageSquare, Info } from "lucide-react";
+import { BellRing, PlaySquare, MonitorPlay, MessageSquare, Info, Edit2 } from "lucide-react";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+  views: number;
+  likes: number;
+  duration: string;
+  uploadDate: string;
+  tags: string[];
+  isShort: boolean;
+  visibility: string;
+  creator: {
+    name: string;
+    username: string;
+    avatar: string;
+    title: string;
+    subscribers: string;
+    bio: string;
+    bannerGradient: string;
+  };
+  comments: any[];
+}
+
+function formatDuration(seconds: number | null | undefined): string {
+  if (!seconds) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
 
 export default async function ChannelPage({
   params,
@@ -12,6 +45,7 @@ export default async function ChannelPage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
+  const { userId: currentUserId } = await auth();
 
   const profile = await prisma.userProfile.findUnique({
     where: { username },
@@ -19,18 +53,53 @@ export default async function ChannelPage({
 
   if (!profile) notFound();
 
-  const [channelVideos, channelShorts, channelPosts] = await Promise.all([
-    getUserVideos(profile.id),
-    getShorts(),
-    getPosts(),
+  const [channelVideos, channelDocuments] = await Promise.all([
+    prisma.video.findMany({
+      where: {
+        uploadedBy: profile.id,
+        contentType: ContentType.VIDEO,
+        visibility: Visibility.PUBLIC,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.document.findMany({
+      where: {
+        uploadedBy: profile.id,
+        visibility: Visibility.PUBLIC,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
-  const userShorts = channelShorts.filter(
-    (s) => s.creator.username === profile.username
-  );
-  const userPosts = channelPosts.filter(
-    (p) => p.author.name === profile.displayName
-  );
+  const mappedVideos: Video[] = channelVideos.map((v) => ({
+    id: v.id,
+    title: v.title,
+    description: v.description || "",
+    category: v.category,
+    thumbnailUrl: v.thumbnailUrl,
+    videoUrl: v.videoUrl,
+    views: v.views,
+    likes: v.likes,
+    duration: formatDuration(v.duration),
+    uploadDate: new Date(v.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }),
+    tags: v.tags,
+    isShort: false,
+    visibility: v.visibility,
+    creator: {
+      name: profile.displayName,
+      username: profile.username,
+      avatar: profile.avatarUrl || profile.displayName[0] || "U",
+      title: profile.bio || "Creator",
+      subscribers: `${profile.followers.length}`,
+      bio: profile.bio || "",
+      bannerGradient: "from-red-900 to-black",
+    },
+    comments: [],
+  }));
 
   const creator = {
     name: profile.displayName,
@@ -41,6 +110,8 @@ export default async function ChannelPage({
     bio: profile.bio || "",
     bannerGradient: "from-red-900 to-black",
   };
+
+  const isOwnChannel = currentUserId === profile.id;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#0A0A0A]">
@@ -64,15 +135,23 @@ export default async function ChannelPage({
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1 mt-1 text-[#999999]">
               <span className="font-semibold text-white">@{creator.username}</span>
               <span>{creator.subscribers} subscribers</span>
-              <span>{channelVideos.length} videos</span>
+              <span>{mappedVideos.length} videos</span>
             </div>
             <p className="mt-3 text-sm text-[#999999] max-w-2xl">{creator.bio}</p>
           </div>
 
-          <div className="mb-2 md:mb-4">
+          <div className="flex gap-3 mb-2 md:mb-4">
             <button className="bg-[#E53935] hover:bg-[#C62828] text-white px-6 py-2.5 rounded-full font-bold transition flex items-center gap-2">
               Subscribe <BellRing className="w-4 h-4" />
             </button>
+            {isOwnChannel && (
+              <Link
+                href="/profile/edit"
+                className="bg-[#2C2C2C] hover:bg-[#3C3C3C] text-white px-6 py-2.5 rounded-full font-bold transition flex items-center gap-2"
+              >
+                <Edit2 className="w-4 h-4" /> Edit Profile
+              </Link>
+            )}
           </div>
         </div>
 
@@ -84,7 +163,7 @@ export default async function ChannelPage({
             <PlaySquare className="w-4 h-4" /> Videos
           </button>
           <button className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent text-[#999999] hover:text-white transition whitespace-nowrap flex items-center gap-2">
-            <MonitorPlay className="w-4 h-4" /> Shorts
+            <MonitorPlay className="w-4 h-4" /> Documents
           </button>
           <button className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent text-[#999999] hover:text-white transition whitespace-nowrap flex items-center gap-2">
             <MessageSquare className="w-4 h-4" /> Community
@@ -97,46 +176,43 @@ export default async function ChannelPage({
         <div className="space-y-12 pb-16">
           <section>
             <h2 className="text-xl font-bold mb-4 text-white">Latest Videos</h2>
-            {channelVideos.length > 0 ? (
+            {mappedVideos.length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {channelVideos.map((video) => (
+                {mappedVideos.map((video) => (
                   <VideoCard key={video.id} video={video} />
                 ))}
               </div>
             ) : (
-              <p className="text-[#999999]">No videos uploaded yet.</p>
+              <div className="bg-[#141414] border border-[#2C2C2C] rounded-2xl p-12 text-center">
+                <p className="text-[#999999]">No videos uploaded yet.</p>
+              </div>
             )}
           </section>
 
-          {userShorts.length > 0 && (
+          {channelDocuments.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold mb-4 text-white">Popular Shorts</h2>
-              <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
-                {userShorts.map((short) => (
-                  <Link key={short.id} href={`/videos/${short.id}`} className="w-64 shrink-0">
-                    <div className="relative aspect-[9/16] rounded-2xl overflow-hidden group border border-[#2C2C2C]">
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${short.gradient} opacity-80 group-hover:scale-105 transition duration-500`}
-                      />
-                      <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/80 to-transparent">
-                        <h3 className="font-bold leading-tight line-clamp-2 text-white">
-                          {short.title}
-                        </h3>
-                        <p className="text-xs text-[#999999] mt-2">{short.views} views</p>
+              <h2 className="text-xl font-bold mb-4 text-white">Documents</h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {channelDocuments.map((doc) => (
+                  <Link
+                    key={doc.id}
+                    href={doc.fileUrl}
+                    target="_blank"
+                    className="bg-[#141414] border border-[#2C2C2C] rounded-2xl p-4 hover:border-[#E53935] transition group"
+                  >
+                    {doc.coverUrl && (
+                      <div className="w-full h-32 bg-gradient-to-br from-red-900 to-black rounded-xl mb-4 overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={doc.coverUrl}
+                          alt={doc.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition"
+                        />
                       </div>
-                    </div>
+                    )}
+                    <h3 className="font-bold text-white line-clamp-2">{doc.title}</h3>
+                    <p className="text-xs text-[#999999] mt-2">{doc.views} views</p>
                   </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {userPosts.length > 0 && (
-            <section className="max-w-3xl">
-              <h2 className="text-xl font-bold mb-4 text-white">Community</h2>
-              <div className="space-y-4">
-                {userPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
                 ))}
               </div>
             </section>

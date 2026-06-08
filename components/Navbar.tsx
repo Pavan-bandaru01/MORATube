@@ -9,9 +9,13 @@ import {
   Menu,
   LayoutDashboard,
   Crown,
+  LogOut,
+  User,
+  Settings,
+  Shield,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { useUser, SignOutButton } from "@clerk/nextjs";
 
 interface Notification {
   id: string;
@@ -34,15 +38,17 @@ const notifIcons: Record<string, typeof Bell> = {
 
 export default function Navbar() {
   const router = useRouter();
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const notifRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const fetchNotifications = useCallback(async () => {
     if (!isSignedIn) return;
@@ -85,6 +91,9 @@ export default function Navbar() {
     function handleClickOutside(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -259,13 +268,81 @@ export default function Navbar() {
           </div>
         )}
 
-        <UserButton
-          appearance={{
-            elements: {
-              avatarBox: "w-9 h-9 border border-[#2C2C2C]",
-            },
-          }}
-        />
+        {/* User Menu */}
+        {isSignedIn && (
+          <div ref={userMenuRef} className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="w-9 h-9 rounded-full bg-[#E53935] text-white font-bold flex items-center justify-center hover:bg-[#C62828] transition border border-[#2C2C2C]"
+            >
+              {user?.firstName?.[0] || "U"}
+            </button>
+
+            {showUserMenu && (
+              <div className="absolute right-0 top-12 w-64 bg-[#141414] border border-[#2C2C2C] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-[60]">
+                {/* User Info */}
+                <div className="px-4 py-4 border-b border-[#2C2C2C]">
+                  <p className="font-bold text-white">{user?.firstName}</p>
+                  <p className="text-xs text-[#999999] mt-1">{user?.emailAddresses[0]?.emailAddress}</p>
+                </div>
+
+                {/* Menu Items */}
+                <div className="py-2">
+                  <Link
+                    href="/profile"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
+                  >
+                    <User className="w-4 h-4" />
+                    My Profile
+                  </Link>
+
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+
+                  {userRole === "VIEWER" && (
+                    <Link
+                      href="/dashboard/upgrade"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
+                    >
+                      <Crown className="w-4 h-4 text-yellow-400" />
+                      Upgrade to Creator
+                    </Link>
+                  )}
+
+                  {userRole === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
+                    >
+                      <Shield className="w-4 h-4 text-purple-400" />
+                      Admin Panel
+                    </Link>
+                  )}
+
+                  {/* Divider */}
+                  <div className="border-t border-[#2C2C2C] my-2" />
+
+                  {/* Sign Out */}
+                  <SignOutButton>
+                    <button className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition w-full">
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {isSearchOpen && (
