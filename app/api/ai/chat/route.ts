@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
   try {
@@ -16,43 +16,27 @@ export async function POST(req: Request) {
       return new NextResponse("Messages are required", { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: `You are MORA Assistant, an AI built for MORATube — a financial literacy platform. 
-      Help users understand money behavior, investing, SIP, mutual funds, debt traps, AI tools, and wealth habits. 
-      Always keep answers concise, practical, and easy to understand for average Indians.
-      Use Indian context — INR, Indian markets, Zerodha, Groww, NSE, BSE.
-      Core message: money works like an employee — deploy it correctly and it builds more money.
-      Never give direct financial advice. Add disclaimer when discussing investments.`,
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content: `You are MORA Assistant, an AI built for MORATube — a financial literacy platform.
+          Help users understand money behavior, investing, SIP, mutual funds, debt traps, AI tools, and wealth habits.
+          Always keep answers concise, practical, and easy to understand for average Indians.
+          Use Indian context — INR, Indian markets, Zerodha, Groww, NSE, BSE.
+          Core message: money works like an employee — deploy it correctly and it builds more money.
+          Never give direct financial advice. Add disclaimer when discussing investments.`,
+        },
+        ...messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+      ],
+      max_tokens: 1024,
     });
 
-    // Build valid history — must start with user, alternate user/model
-    const previousMessages = messages.slice(0, -1);
-    const validHistory: { role: string; parts: { text: string }[] }[] = [];
-
-    for (const msg of previousMessages) {
-      const role = msg.role === "assistant" ? "model" : "user";
-      // Skip if same role as last added (Gemini requires alternating)
-      if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === role) {
-        continue;
-      }
-      validHistory.push({
-        role,
-        parts: [{ text: msg.content }],
-      });
-    }
-
-    // Ensure history starts with user
-    while (validHistory.length > 0 && validHistory[0].role !== "user") {
-      validHistory.shift();
-    }
-
-    const chat = model.startChat({ history: validHistory });
-
-    const lastMessage = messages[messages.length - 1].content;
-    const result = await chat.sendMessage(lastMessage);
-    const content = result.response.text();
-
+    const content = completion.choices[0].message.content;
     return NextResponse.json({ content });
   } catch (error) {
     console.error("[AI_CHAT_ERROR]", error);
