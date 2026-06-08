@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   UploadCloud,
@@ -41,6 +41,20 @@ export default function DocumentUploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/role")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profile?.role === "VIEWER") {
+          router.replace("/dashboard/upgrade");
+        } else {
+          setRoleChecked(true);
+        }
+      })
+      .catch(() => router.replace("/sign-in"));
+  }, [router]);
 
   const handleDocFile = (file: File) => {
     if (!file.name.match(/\.(pdf|epub|docx)$/i)) {
@@ -132,6 +146,14 @@ export default function DocumentUploadPage() {
       setIsUploading(false);
     }
   };
+
+  if (!roleChecked) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#0A0A0A]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#E53935]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] p-4 md:p-8 max-w-3xl mx-auto">

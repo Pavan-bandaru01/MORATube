@@ -17,13 +17,9 @@ export default function VideoCard({ video, layout = "grid" }: VideoCardProps) {
   if (layout === "list") {
     return (
       <Link href={`/videos/${video.id}`} className="group flex flex-col sm:flex-row gap-4 hover:bg-white/5 p-2 rounded-2xl transition">
-        <div className="relative w-full sm:w-64 aspect-video rounded-xl overflow-hidden bg-gradient-to-br bg-zinc-900 border border-white/10 shrink-0">
-          {video.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-          ) : (
-            <div className={`absolute inset-0 bg-gradient-to-br ${video.thumbnailGradient} opacity-80 group-hover:scale-105 transition duration-500`} />
-          )}
+        <div className="relative w-full sm:w-64 aspect-video rounded-xl overflow-hidden bg-[#141414] border border-[#2C2C2C] shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500" />
           
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
             <div className="w-12 h-12 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
@@ -63,13 +59,9 @@ export default function VideoCard({ video, layout = "grid" }: VideoCardProps) {
 
   return (
     <Link href={`/videos/${video.id}`} className="group flex flex-col gap-3">
-      <div className="relative aspect-video rounded-2xl overflow-hidden bg-zinc-900 border border-white/5 group-hover:border-white/10 transition duration-300">
-        {video.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out" />
-        ) : (
-          <div className={`absolute inset-0 bg-gradient-to-br ${video.thumbnailGradient} opacity-80 group-hover:scale-105 transition duration-700 ease-out`} />
-        )}
+      <div className="relative aspect-video rounded-2xl overflow-hidden bg-[#141414] border border-[#2C2C2C] group-hover:border-[#E53935]/30 transition duration-300">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out" />
         
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
           <div className="w-14 h-14 bg-red-600/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white transform scale-90 group-hover:scale-100 transition duration-300">

@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "MORA Tube - Watch. Learn. Grow.",
   description: "Money Era awareness platform. Learn about finance, AI tools, habits, and technology.",
@@ -17,7 +19,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="dark">
-        <body className="antialiased min-h-screen flex flex-col selection:bg-red-500 selection:text-white">
+        <body className="antialiased min-h-screen flex flex-col bg-[#0A0A0A] text-white selection:bg-[#E53935] selection:text-white">
           <Navbar />
           
           <div className="flex flex-1 pt-16">

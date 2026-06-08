@@ -143,7 +143,11 @@ export default function SearchContent() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {documents.map((doc) => (
-            <div key={doc.id} className="group flex flex-col gap-3">
+            <Link
+              key={doc.id}
+              href={`/documents/${doc.id}`}
+              className="group flex flex-col gap-3"
+            >
               <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-zinc-900 border border-white/5">
                 {doc.coverUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -163,7 +167,7 @@ export default function SearchContent() {
                 <p className="text-sm text-gray-400">{doc.channelName}</p>
                 <p className="text-sm text-gray-500">{formatViews(doc.views)} views</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

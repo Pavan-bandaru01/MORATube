@@ -159,7 +159,7 @@ export async function POST(req: Request) {
               type: NotifType.NEW_DOCUMENT,
               title: "New Document Shared",
               message: `${profile.displayName} shared a new document: "${title}"`,
-              link: `/books`, // Books page lists documents
+              link: `/documents/${document.id}`,
               read: false,
             },
           })

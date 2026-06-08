@@ -57,17 +57,18 @@ export async function POST(req: Request) {
       ? tagsStr.split(",").map((t) => t.trim()).filter(Boolean)
       : [];
 
-    // 5. Convert file to base64 and upload to Cloudinary
     const bytes = await videoFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString("base64");
-    const dataUri = `data:${videoFile.type};base64,${base64}`;
 
     console.log("Starting Cloudinary upload...");
 
-    const uploadResult = await new Promise<any>((resolve, reject) => {
-      cloudinary.uploader.upload(
-        dataUri,
+    const uploadResult = await new Promise<{
+      public_id: string;
+      secure_url: string;
+      duration?: number;
+      eager?: { secure_url: string }[];
+    }>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: "video",
           folder: "moratube/videos",
@@ -86,12 +87,15 @@ export async function POST(req: Request) {
           if (error) {
             console.error("Cloudinary error:", error);
             reject(error);
-          } else {
-            console.log("Cloudinary success:", result?.public_id);
+          } else if (result) {
+            console.log("Cloudinary success:", result.public_id);
             resolve(result);
+          } else {
+            reject(new Error("Cloudinary upload returned no result"));
           }
         }
       );
+      uploadStream.end(buffer);
     });
 
     if (!uploadResult || !uploadResult.public_id) {

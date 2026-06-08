@@ -1,12 +1,12 @@
-import HeroSection from "@/components/HeroSection";
-import VideoCard from "@/components/VideoCard";
-import CreatorCard from "@/components/CreatorCard";
-import Footer from "@/components/Footer";
-import { getVideos, getShorts } from "@/lib/actions";
-import { categories } from "@/data/categories";
-import { resolveCategoryParam, categoryToSlug } from "@/lib/category-map";
-import { TrendingUp, Sparkles, PlayCircle, Users } from "lucide-react";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { ContentType, Visibility } from "@prisma/client";
+import { resolveCategoryParam } from "@/lib/category-map";
+import { categories } from "@/data/categories";
+import { TrendingUp, PlayCircle, Sparkles } from "lucide-react";
+import VideoCard from "@/components/VideoCard";
+import Footer from "@/components/Footer";
+import { getShorts } from "@/lib/actions";
 
 export default async function Home({
   searchParams,
@@ -16,24 +16,67 @@ export default async function Home({
   const resolvedParams = await searchParams;
   const categoryParam = resolvedParams.category;
   const prismaCategory = resolveCategoryParam(categoryParam);
-  const categorySlug = prismaCategory
-    ? categoryToSlug(prismaCategory)
-    : categoryParam || "all";
 
-  const allVideos = await getVideos(categorySlug === "all" ? undefined : categorySlug);
+  const allVideos = await prisma.video.findMany({
+    where: {
+      visibility: Visibility.PUBLIC,
+      contentType: ContentType.VIDEO,
+      ...(prismaCategory ? { category: prismaCategory } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const mustWatchVideos = [...allVideos]
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 6);
+
   const allShorts = await getShorts();
-  const featuredVideos = allVideos.slice(0, 6);
   const featuredShorts = allShorts.slice(0, 5);
 
-  return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-      <div className="flex-1 p-4 md:p-8 space-y-16">
-        <HeroSection />
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
+  const mapToCard = (v: (typeof allVideos)[0]) => ({
+    id: v.id,
+    title: v.title,
+    description: v.description || "",
+    category: v.category,
+    thumbnailUrl: v.thumbnailUrl,
+    videoUrl: v.videoUrl,
+    views: v.views,
+    likes: v.likes,
+    duration: formatDuration(v.duration),
+    uploadDate: new Date(v.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }),
+    tags: v.tags,
+    isShort: false,
+    visibility: v.visibility,
+    creator: {
+      name: v.channelName,
+      username: v.uploadedBy,
+      avatar: v.channelName[0] || "U",
+      title: "Creator",
+      subscribers: "0",
+      bio: "",
+      bannerGradient: "from-red-900 to-black",
+    },
+    comments: [],
+  });
+
+  return (
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-[#0A0A0A]">
+      <div className="flex-1 p-4 md:p-8 space-y-16">
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-red-500" /> Trending Topics
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+              <TrendingUp className="w-6 h-6 text-[#E53935]" /> Trending Topics
             </h2>
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
@@ -43,9 +86,7 @@ export default async function Home({
                   ? "ALL"
                   : category.id.toUpperCase().replace(/-/g, "_");
               const href =
-                category.id === "all"
-                  ? "/"
-                  : `/?category=${enumValue}`;
+                category.id === "all" ? "/" : `/?category=${enumValue}`;
               const isActive =
                 category.id === "all"
                   ? !categoryParam || categoryParam === "ALL"
@@ -59,8 +100,8 @@ export default async function Home({
                   href={href}
                   className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition flex items-center gap-2 border ${
                     isActive
-                      ? "bg-red-600 text-white border-red-600"
-                      : "bg-white/5 hover:bg-white/10 border-white/10"
+                      ? "bg-[#E53935] text-white border-[#E53935]"
+                      : "bg-[#141414] hover:bg-[#1F1F1F] border-[#2C2C2C] text-[#999999]"
                   }`}
                 >
                   <span>{category.icon}</span>
@@ -73,111 +114,81 @@ export default async function Home({
 
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <PlayCircle className="w-6 h-6 text-red-500" /> Must Watch
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+              <PlayCircle className="w-6 h-6 text-[#E53935]" /> Must Watch
             </h2>
-            <Link href="/videos" className="text-sm font-bold text-red-500 hover:text-red-400 transition">
+            <Link
+              href="/videos"
+              className="text-sm font-bold text-[#E53935] hover:text-[#C62828] transition"
+            >
               View All
             </Link>
           </div>
-          {featuredVideos.length > 0 ? (
+          {mustWatchVideos.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-              {featuredVideos.map((video) => (
-                <VideoCard key={video.id} video={video} />
+              {mustWatchVideos.map((video) => (
+                <VideoCard key={video.id} video={mapToCard(video)} />
               ))}
             </div>
           ) : (
-            <div className="glass rounded-3xl p-12 text-center">
-              <p className="text-gray-400">No videos in this category yet.</p>
+            <div className="bg-[#141414] border border-[#2C2C2C] rounded-2xl p-12 text-center">
+              <p className="text-[#999999]">No videos yet. Check back soon!</p>
             </div>
           )}
         </section>
 
+        {allVideos.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Latest Videos</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {allVideos.slice(0, 8).map((video) => (
+                <VideoCard key={video.id} video={mapToCard(video)} />
+              ))}
+            </div>
+          </section>
+        )}
+
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-red-500" /> MORA Shorts
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
+              <Sparkles className="w-6 h-6 text-[#E53935]" /> MORA Shorts
             </h2>
-            <Link href="/shorts" className="text-sm font-bold text-red-500 hover:text-red-400 transition">
+            <Link
+              href="/shorts"
+              className="text-sm font-bold text-[#E53935] hover:text-[#C62828] transition"
+            >
               View All
             </Link>
           </div>
           {featuredShorts.length > 0 ? (
-            <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4">
               {featuredShorts.map((short) => (
-                <div key={short.id} className="w-64 shrink-0">
-                  <div className="relative aspect-[9/16] rounded-2xl overflow-hidden group cursor-pointer">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${short.gradient} opacity-80 group-hover:scale-105 transition duration-500`} />
+                <Link
+                  key={short.id}
+                  href={`/videos/${short.id}`}
+                  className="w-64 shrink-0"
+                >
+                  <div className="relative aspect-[9/16] rounded-2xl overflow-hidden group border border-[#2C2C2C]">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${short.gradient} opacity-80 group-hover:scale-105 transition duration-500`}
+                    />
                     <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/80 to-transparent">
-                      <h3 className="font-bold leading-tight line-clamp-2">{short.title}</h3>
-                      <p className="text-xs text-gray-300 mt-2">{short.views} views</p>
+                      <h3 className="font-bold leading-tight line-clamp-2 text-white">
+                        {short.title}
+                      </h3>
+                      <p className="text-xs text-[#999999] mt-2">{short.views} views</p>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
-            <div className="glass rounded-3xl p-8 text-center">
-              <p className="text-gray-400">No shorts yet.</p>
+            <div className="bg-[#141414] border border-[#2C2C2C] rounded-2xl p-8 text-center">
+              <p className="text-[#999999]">No shorts yet.</p>
             </div>
           )}
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Users className="w-6 h-6 text-red-500" /> Top Creators
-            </h2>
-          </div>
-          <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-6">
-            <CreatorCard creator={{
-              name: "MORA Finance",
-              username: "mora-finance",
-              avatar: "M",
-              title: "Financial Awareness",
-              subscribers: "24.5K",
-              bio: "Making money education simple and accessible for everyone.",
-              bannerGradient: "from-red-950 via-red-900 to-black"
-            }} />
-            <CreatorCard creator={{
-              name: "AI Growth",
-              username: "ai-growth",
-              avatar: "A",
-              title: "AI Explorer",
-              subscribers: "31.8K",
-              bio: "Exploring how AI can help everyday people learn and grow.",
-              bannerGradient: "from-blue-950 via-indigo-900 to-black"
-            }} />
-            <CreatorCard creator={{
-              name: "Wealth Builder",
-              username: "wealth-builder",
-              avatar: "W",
-              title: "Money Coach",
-              subscribers: "18.2K",
-              bio: "Teaching practical wealth-building habits.",
-              bannerGradient: "from-amber-950 via-orange-900 to-black"
-            }} />
-          </div>
-        </section>
-
-        <section className="glass rounded-3xl p-10 md:p-16 text-center max-w-5xl mx-auto my-16 relative overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-600/10 rounded-full blur-3xl"></div>
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-5xl font-black mb-6">
-              Why MORA Tube Exists
-            </h2>
-            <p className="text-gray-300 md:text-lg max-w-3xl mx-auto leading-relaxed">
-              Many people earn money but do not understand money behavior, debt
-              traps, investing, AI tools, and modern opportunities. MORA Tube
-              spreads awareness through videos, shorts, tools, resources, and
-              community learning.
-            </p>
-            <div className="mt-8 flex justify-center gap-4">
-              <Link href="/finance-hub" className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition">
-                Explore Finance Hub
-              </Link>
-            </div>
-          </div>
         </section>
       </div>
 

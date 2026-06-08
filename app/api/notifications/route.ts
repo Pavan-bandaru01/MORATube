@@ -29,3 +29,25 @@ export async function GET() {
     );
   }
 }
+
+export async function PATCH() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await prisma.notification.updateMany({
+      where: { userId, read: false },
+      data: { read: true },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[NOTIFICATIONS_PATCH]", error);
+    return NextResponse.json(
+      { error: "Failed to mark notifications as read" },
+      { status: 500 }
+    );
+  }
+}

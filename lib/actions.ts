@@ -47,11 +47,9 @@ async function mapDbVideoToVideo(dbVideo: {
   const creator = await getCreatorForUser(dbVideo.uploadedBy, dbVideo.channelName);
   return {
     id: dbVideo.id,
-    slug: dbVideo.id,
     title: dbVideo.title,
     description: dbVideo.description || "",
     category: dbVideo.category,
-    thumbnailGradient: categoryToGradient(dbVideo.category),
     thumbnailUrl: dbVideo.thumbnailUrl,
     videoUrl: dbVideo.videoUrl,
     views: dbVideo.views,
@@ -129,6 +127,8 @@ export async function getShorts(): Promise<Short[]> {
         comments: 0,
         duration: formatDuration(dbShort.duration),
         gradient: categoryToGradient(dbShort.category),
+        videoUrl: dbShort.videoUrl,
+        thumbnailUrl: dbShort.thumbnailUrl,
         creator,
       };
     })
@@ -136,34 +136,38 @@ export async function getShorts(): Promise<Short[]> {
 }
 
 export async function getPosts(): Promise<Post[]> {
-  const dbPosts = await prisma.post.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const dbPosts = await prisma.post.findMany({
+      orderBy: { createdAt: "desc" },
+    });
 
-  return Promise.all(
-    dbPosts.map(async (dbPost) => {
-      const profile = await prisma.userProfile.findUnique({
-        where: { id: dbPost.uploadedBy },
-      });
-      return {
-        id: dbPost.id,
-        title: dbPost.title,
-        content: dbPost.content,
-        imageUrl: dbPost.imageUrl || undefined,
-        likes: dbPost.likes,
-        comments: 0,
-        shares: 0,
-        createdAt: formatDistanceToNow(new Date(dbPost.createdAt), {
-          addSuffix: true,
-        }),
-        author: {
-          name: profile?.displayName || dbPost.channelName,
-          avatar: profile?.avatarUrl || dbPost.channelName[0] || "U",
-          role: profile?.bio || "Creator",
-        },
-      };
-    })
-  );
+    return Promise.all(
+      dbPosts.map(async (dbPost) => {
+        const profile = await prisma.userProfile.findUnique({
+          where: { id: dbPost.uploadedBy },
+        });
+        return {
+          id: dbPost.id,
+          title: dbPost.title,
+          content: dbPost.content,
+          imageUrl: dbPost.imageUrl || undefined,
+          likes: dbPost.likes,
+          comments: 0,
+          shares: 0,
+          createdAt: formatDistanceToNow(new Date(dbPost.createdAt), {
+            addSuffix: true,
+          }),
+          author: {
+            name: profile?.displayName || dbPost.channelName,
+            avatar: profile?.avatarUrl || dbPost.channelName[0] || "U",
+            role: profile?.bio || "Creator",
+          },
+        };
+      })
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function getBooks(): Promise<Book[]> {
@@ -205,4 +209,35 @@ export async function getUserVideos(userId: string): Promise<Video[]> {
     orderBy: { createdAt: "desc" },
   });
   return Promise.all(dbVideos.map(mapDbVideoToVideo));
+}
+
+export async function getTopVideosByViews(
+  category?: string,
+  limit = 6
+): Promise<Video[]> {
+  const prismaCategory = resolveCategoryParam(category);
+
+  const dbVideos = await prisma.video.findMany({
+    where: {
+      contentType: ContentType.VIDEO,
+      visibility: Visibility.PUBLIC,
+      ...(prismaCategory ? { category: prismaCategory } : {}),
+    },
+    orderBy: { views: "desc" },
+    take: limit,
+  });
+
+  return Promise.all(dbVideos.map(mapDbVideoToVideo));
+}
+
+export async function getDocuments(category?: string) {
+  const prismaCategory = resolveCategoryParam(category);
+
+  return prisma.document.findMany({
+    where: {
+      visibility: Visibility.PUBLIC,
+      ...(prismaCategory ? { category: prismaCategory } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+  });
 }

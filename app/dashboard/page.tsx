@@ -14,9 +14,9 @@ export default async function DashboardPage() {
   const myVideos = await db.video.findMany({
     where: { uploadedBy: userId },
     orderBy: { createdAt: "desc" },
-    take: 5,
   });
 
+  const recentVideos = myVideos.slice(0, 5);
   const totalViews = myVideos.reduce((sum, v) => sum + v.views, 0);
   const totalLikes = myVideos.reduce((sum, v) => sum + v.likes, 0);
 
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {myVideos.map((video) => (
+            {recentVideos.map((video) => (
               <div key={video.id}
                 className="flex gap-4 p-3 hover:bg-white/5 rounded-2xl transition border border-transparent hover:border-white/10">
                 <img

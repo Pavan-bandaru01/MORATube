@@ -4,12 +4,10 @@
 
 export interface Video {
   id: string;
-  slug: string;
   title: string;
   description: string;
   category: string;
-  thumbnailGradient: string;
-  thumbnailUrl?: string;
+  thumbnailUrl: string;
   videoUrl: string;
   creator: Creator;
   views: number;
@@ -32,6 +30,8 @@ export interface Short {
   comments: number;
   duration: string;
   gradient: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
 }
 
 export interface Creator {

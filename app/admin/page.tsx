@@ -10,6 +10,7 @@ interface AdminStats {
   totalVideos: number;
   totalDocuments: number;
   totalViews: number;
+  topSearches?: { query: string; count: number }[];
   recentUploads: {
     id: string;
     title: string;
@@ -130,6 +131,22 @@ export default function AdminPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
+        {stats.topSearches && stats.topSearches.length > 0 && (
+          <section className="glass rounded-3xl p-6 lg:col-span-2">
+            <h2 className="text-xl font-bold mb-4 text-white">Top Searches</h2>
+            <div className="flex flex-wrap gap-2">
+              {stats.topSearches.map((s) => (
+                <span
+                  key={s.query}
+                  className="px-4 py-2 rounded-full bg-[#141414] border border-[#2C2C2C] text-sm text-[#999999]"
+                >
+                  {s.query} ({s.count})
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="glass rounded-3xl p-6">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <Video className="w-5 h-5 text-red-500" /> Recent Uploads

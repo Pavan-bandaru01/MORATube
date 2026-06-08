@@ -2,11 +2,11 @@
 
 @theme {
   --font-sans: "Inter", Arial, Helvetica, sans-serif;
-  --color-background: #050505;
-  --color-surface: rgba(255, 255, 255, 0.05);
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-accent: #dc2626;
-  --color-accent-hover: #b91c1c;
+  --color-background: #0A0A0A;
+  --color-surface: #141414;
+  --color-border: #2C2C2C;
+  --color-accent: #E53935;
+  --color-accent-hover: #C62828;
 }
 
 /* Base styles */

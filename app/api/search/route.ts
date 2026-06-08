@@ -33,6 +33,7 @@ export async function GET(req: Request) {
       where: {
         OR: [
           { title: { contains: query, mode: "insensitive" } },
+          { author: { contains: query, mode: "insensitive" } },
           { description: { contains: query, mode: "insensitive" } },
           { tags: { has: query } },
         ],

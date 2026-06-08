@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   UploadCloud,
@@ -43,6 +43,20 @@ export default function UploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [roleChecked, setRoleChecked] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/role")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profile?.role === "VIEWER") {
+          router.replace("/dashboard/upgrade");
+        } else {
+          setRoleChecked(true);
+        }
+      })
+      .catch(() => router.replace("/sign-in"));
+  }, [router]);
 
   const handleFile = (file: File) => {
     const validTypes = ["video/mp4", "video/quicktime", "video/webm"];
@@ -50,8 +64,8 @@ export default function UploadPage() {
       toast.error("Please select an MP4, MOV, or WEBM file");
       return;
     }
-    if (file.size > 2 * 1024 * 1024 * 1024) {
-      toast.error("Video must be under 2GB");
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error("Video must be under 500MB");
       return;
     }
     setVideoFile(file);
@@ -125,6 +139,14 @@ export default function UploadPage() {
     }
   };
 
+  if (!roleChecked) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#0A0A0A]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#E53935]" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-4rem)] p-4 md:p-8 max-w-3xl mx-auto">
       <h1 className="text-3xl font-black mb-2">Upload Video</h1>
@@ -190,7 +212,7 @@ export default function UploadPage() {
               <>
                 <UploadCloud className="w-12 h-12 text-gray-400 mb-3" />
                 <p className="font-medium">Drag & drop or click to select</p>
-                <p className="text-xs text-gray-500 mt-1">MP4, MOV, WEBM up to 2GB</p>
+                <p className="text-xs text-gray-500 mt-1">MP4, MOV, WEBM up to 500MB</p>
               </>
             )}
           </div>
