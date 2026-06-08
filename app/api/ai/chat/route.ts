@@ -44,3 +44,18 @@ export async function POST(req: Request) {
 
     // Ensure history starts with user
     while (validHistory.length > 0 && validHistory[0].role !== "user") {
+      validHistory.shift();
+    }
+
+    const chat = model.startChat({ history: validHistory });
+
+    const lastMessage = messages[messages.length - 1].content;
+    const result = await chat.sendMessage(lastMessage);
+    const content = result.response.text();
+
+    return NextResponse.json({ content });
+  } catch (error) {
+    console.error("[AI_CHAT_ERROR]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
