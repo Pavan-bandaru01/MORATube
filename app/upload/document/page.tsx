@@ -2,12 +2,14 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   UploadCloud,
   FileText,
   Image as ImageIcon,
   Loader2,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import toast from "react-hot-toast";
 

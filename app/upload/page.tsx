@@ -1,48 +1,32 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  UploadCloud,
-  ChevronRight,
-  ChevronLeft,
+  Play,
+  Zap,
+  FileText,
+  Book,
+  Pencil,
+  ArrowRight,
   Loader2,
-  FileVideo,
-  X,
 } from "lucide-react";
-import toast from "react-hot-toast";
 
-const CATEGORIES = [
-  { value: "MONEY_AWARENESS", label: "Money Awareness" },
-  { value: "AI_TOOLS", label: "AI Tools" },
-  { value: "FINANCE", label: "Finance" },
-  { value: "INVESTING", label: "Investing" },
-  { value: "DEBT_ESCAPE", label: "Debt Escape" },
-  { value: "STUDENT_GROWTH", label: "Student Growth" },
-  { value: "TECHNOLOGY", label: "Technology" },
-  { value: "MOTIVATION", label: "Motivation" },
-];
-
-function formatFileSize(bytes: number) {
-  if (bytes >= 1024 * 1024 * 1024) {
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+interface UploadCard {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  specs: string[];
+  href: string;
+  bgColor: string;
+  accentColor: string;
+  buttonText: string;
 }
 
-export default function UploadPage() {
+export default function UploadHubPage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [step, setStep] = useState(1);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("FINANCE");
-  const [tags, setTags] = useState("");
-  const [visibility, setVisibility] = useState("PUBLIC");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [roleChecked, setRoleChecked] = useState(false);
 
   useEffect(() => {
@@ -58,86 +42,63 @@ export default function UploadPage() {
       .catch(() => router.replace("/sign-in"));
   }, [router]);
 
-  const handleFile = (file: File) => {
-    const validTypes = ["video/mp4", "video/quicktime", "video/webm"];
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(mp4|mov|webm)$/i)) {
-      toast.error("Please select an MP4, MOV, or WEBM file");
-      return;
-    }
-    if (file.size > 500 * 1024 * 1024) {
-      toast.error("Video must be under 500MB");
-      return;
-    }
-    setVideoFile(file);
-    if (!title) {
-      const name = file.name.replace(/\.[^.]+$/, "");
-      setTitle(name);
-    }
-  };
-
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, [title]);
-
-  const uploadWithProgress = (formData: FormData): Promise<{ success: boolean; videoId?: string; error?: string }> => {
-    return new Promise((resolve) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/upload/video");
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          setUploadProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
-
-      xhr.onload = () => {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve({ success: true, videoId: data.videoId });
-          } else {
-            resolve({ success: false, error: data.error || "Upload failed" });
-          }
-        } catch {
-          resolve({ success: false, error: "Upload failed" });
-        }
-      };
-
-      xhr.onerror = () => resolve({ success: false, error: "Network error" });
-      xhr.send(formData);
-    });
-  };
-
-  const handleSubmit = async () => {
-    if (!videoFile || !title.trim()) {
-      toast.error("Video file and title are required");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const formData = new FormData();
-    formData.append("videoFile", videoFile);
-    formData.append("title", title.trim());
-    formData.append("description", description.trim());
-    formData.append("category", category);
-    formData.append("tags", tags);
-    formData.append("visibility", visibility);
-
-    const result = await uploadWithProgress(formData);
-
-    if (result.success) {
-      toast.success("Video uploaded successfully!");
-      router.push("/dashboard");
-    } else {
-      toast.error(result.error || "Upload failed");
-      setIsUploading(false);
-    }
-  };
+  const uploadCards: UploadCard[] = [
+    {
+      id: "video",
+      icon: <Play className="w-8 h-8" />,
+      title: "Upload Video",
+      description: "Share finance tutorials, investment guides, money tips",
+      specs: ["MP4, MOV, WEBM", "Max 2GB"],
+      href: "/upload/video",
+      bgColor: "#1A0000",
+      accentColor: "#E53935",
+      buttonText: "Upload Video",
+    },
+    {
+      id: "short",
+      icon: <Zap className="w-8 h-8" />,
+      title: "Upload Short",
+      description: "60-second money tips, daily motivation, quick facts",
+      specs: ["MP4, MOV", "Max 60 seconds", "Vertical 9:16"],
+      href: "/upload/short",
+      bgColor: "#1A0F00",
+      accentColor: "#FF6B00",
+      buttonText: "Upload Short",
+    },
+    {
+      id: "document",
+      icon: <FileText className="w-8 h-8" />,
+      title: "Upload Document",
+      description: "Research papers, financial reports, investment analysis",
+      specs: ["PDF, DOCX, TXT", "Max 50MB"],
+      href: "/upload/document",
+      bgColor: "#000A1A",
+      accentColor: "#1565C0",
+      buttonText: "Upload Document",
+    },
+    {
+      id: "book",
+      icon: <Book className="w-8 h-8" />,
+      title: "Upload Book",
+      description: "Finance books, investment guides, wealth building resources",
+      specs: ["PDF, EPUB", "Max 100MB"],
+      href: "/upload/book",
+      bgColor: "#001A00",
+      accentColor: "#2E7D32",
+      buttonText: "Upload Book",
+    },
+    {
+      id: "notes",
+      icon: <Pencil className="w-8 h-8" />,
+      title: "Write Notes",
+      description: "Share finance tips, investment insights, money lessons",
+      specs: ["Text only", "No file needed"],
+      href: "/upload/notes",
+      bgColor: "#0F001A",
+      accentColor: "#6A1B9A",
+      buttonText: "Write Notes",
+    },
+  ];
 
   if (!roleChecked) {
     return (
@@ -148,237 +109,121 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] p-4 md:p-8 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-black mb-2">Upload Video</h1>
-      <p className="text-gray-400 mb-8">Step {step} of 3</p>
+    <div className="min-h-[calc(100vh-4rem)] pt-24 pb-16 px-4 md:px-6 lg:px-8 bg-[#0A0A0A]">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-16 text-center">
+          <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight">
+            What would you like to share today?
+          </h1>
+          <p className="text-lg text-gray-400">
+            Choose your content type to get started
+          </p>
+        </div>
 
-      {/* Progress Steps */}
-      <div className="flex gap-2 mb-8">
-        {[1, 2, 3].map((s) => (
-          <div
-            key={s}
-            className={`flex-1 h-1 rounded-full transition ${
-              s <= step ? "bg-red-600" : "bg-white/10"
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Step 1: File Selection */}
-      {step === 1 && (
-        <div className="space-y-6">
-          <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={onDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative h-56 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition ${
-              isDragging
-                ? "border-red-500 bg-red-500/5"
-                : videoFile
-                ? "border-red-500/50 bg-black"
-                : "border-white/20 hover:border-white/40 bg-white/5"
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
-            />
-            {videoFile ? (
-              <div className="text-center px-6">
-                <FileVideo className="w-12 h-12 text-red-500 mx-auto mb-3" />
-                <p className="font-semibold">{videoFile.name}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatFileSize(videoFile.size)}
-                </p>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setVideoFile(null);
-                  }}
-                  className="mt-3 text-xs text-red-400 hover:text-red-300 flex items-center gap-1 mx-auto"
+        {/* Upload Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {uploadCards.map((card) => (
+            <Link
+              key={card.id}
+              href={card.href}
+              className="group"
+            >
+              <div
+                className="h-full bg-[#141414] border border-[#2C2C2C] rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer"
+                style={{
+                  boxShadow: `0 0 0 1px rgba(0,0,0,0.5), 0 0 40px -10px ${card.accentColor}00`,
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = 
+                    `0 0 0 2px ${card.accentColor}40, 0 0 60px 0px ${card.accentColor}30`;
+                  (e.currentTarget as HTMLElement).style.borderColor = `${card.accentColor}60`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = 
+                    `0 0 0 1px rgba(0,0,0,0.5), 0 0 40px -10px ${card.accentColor}00`;
+                  (e.currentTarget as HTMLElement).style.borderColor = `#2C2C2C`;
+                }}
+              >
+                {/* Icon */}
+                <div
+                  className="w-16 h-16 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300"
+                  style={{ backgroundColor: `${card.accentColor}20` }}
                 >
-                  <X className="w-3 h-3" /> Remove
+                  <div style={{ color: card.accentColor }}>
+                    {card.icon}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold mb-2">{card.title}</h3>
+
+                {/* Description */}
+                <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                  {card.description}
+                </p>
+
+                {/* Specs */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {card.specs.map((spec, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs px-3 py-1 rounded-full"
+                      style={{
+                        backgroundColor: `${card.accentColor}15`,
+                        color: card.accentColor,
+                        border: `1px solid ${card.accentColor}40`,
+                      }}
+                    >
+                      {spec}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Button */}
+                <button
+                  className="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-between group/btn text-white"
+                  style={{
+                    backgroundColor: `${card.accentColor}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.opacity = "0.9";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.opacity = "1";
+                  }}
+                >
+                  {card.buttonText}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                 </button>
               </div>
-            ) : (
-              <>
-                <UploadCloud className="w-12 h-12 text-gray-400 mb-3" />
-                <p className="font-medium">Drag & drop or click to select</p>
-                <p className="text-xs text-gray-500 mt-1">MP4, MOV, WEBM up to 500MB</p>
-              </>
-            )}
-          </div>
-
-          <button
-            onClick={() => videoFile && setStep(2)}
-            disabled={!videoFile}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 disabled:text-gray-500 text-white py-3 rounded-full font-bold transition flex items-center justify-center gap-2"
-          >
-            Continue <ChevronRight className="w-4 h-4" />
-          </button>
+            </Link>
+          ))}
         </div>
-      )}
 
-      {/* Step 2: Metadata */}
-      {step === 2 && (
-        <div className="glass rounded-3xl p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Title <span className="text-red-400">*</span>
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-zinc-900 border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 outline-none text-sm"
-              placeholder="Video title"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-28 bg-zinc-900 border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 outline-none text-sm resize-none"
-              placeholder="Tell viewers about your video..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-zinc-900 border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 outline-none text-sm"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">
-              Tags
-            </label>
-            <input
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              className="w-full bg-zinc-900 border border-white/10 focus:border-red-500/50 rounded-xl px-4 py-3 outline-none text-sm"
-              placeholder="finance, investing, ai (comma separated)"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep(1)}
-              className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-full font-bold transition flex items-center justify-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back
-            </button>
-            <button
-              onClick={() => title.trim() && setStep(3)}
-              disabled={!title.trim()}
-              className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white py-3 rounded-full font-bold transition flex items-center justify-center gap-2"
-            >
-              Continue <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Tips Section */}
+        <div className="bg-[#141414] border border-[#2C2C2C] rounded-2xl p-8 max-w-3xl mx-auto">
+          <h3 className="text-lg font-bold mb-4">📝 Tips for Success</h3>
+          <ul className="space-y-3 text-gray-300 text-sm">
+            <li className="flex gap-3">
+              <span className="text-[#E53935]">•</span>
+              <span>Use clear, descriptive titles to help people find your content</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-[#E53935]">•</span>
+              <span>Add relevant tags to improve discoverability</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-[#E53935]">•</span>
+              <span>Choose the right category so your content reaches the right audience</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-[#E53935]">•</span>
+              <span>Public content gets more visibility, private is for personal storage</span>
+            </li>
+          </ul>
         </div>
-      )}
-
-      {/* Step 3: Visibility & Submit */}
-      {step === 3 && (
-        <div className="glass rounded-3xl p-6 space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-3">
-              Visibility
-            </label>
-            <div className="space-y-2">
-              {[
-                { value: "PUBLIC", label: "Public", desc: "Anyone can find and watch" },
-                { value: "UNLISTED", label: "Unlisted", desc: "Only people with the link" },
-                { value: "PRIVATE", label: "Private", desc: "Only you can see" },
-              ].map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition ${
-                    visibility === opt.value
-                      ? "border-red-500 bg-red-500/5"
-                      : "border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="visibility"
-                    value={opt.value}
-                    checked={visibility === opt.value}
-                    onChange={() => setVisibility(opt.value)}
-                    className="accent-red-600"
-                  />
-                  <div>
-                    <p className="font-semibold text-sm">{opt.label}</p>
-                    <p className="text-xs text-gray-500">{opt.desc}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {isUploading && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Uploading...</span>
-                <span className="text-red-400 font-semibold">{uploadProgress}%</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-red-600 transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep(2)}
-              disabled={isUploading}
-              className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-full font-bold transition flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" /> Back
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={isUploading}
-              className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 text-white py-3 rounded-full font-bold transition flex items-center justify-center gap-2"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Uploading...
-                </>
-              ) : (
-                "Publish Video"
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
