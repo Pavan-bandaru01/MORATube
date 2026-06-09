@@ -1,35 +1,39 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
-import VideoCard from "./VideoCard";
+import { Send, Bot, User } from "lucide-react";
 import type { Video } from "@/types";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
-  relatedVideos?: Video[];
 }
 
 const suggestedPrompts = [
-  "How can I stop impulse spending?",
-  "What is the 50/30/20 budget rule?",
-  "Explain mutual funds to a beginner",
-  "How can I use AI to learn coding?",
+  "What is SIP?",
+  "How to invest ₹5000?",
+  "Explain mutual funds",
+  "What is compound interest?",
 ];
 
+function formatAIText(text: string) {
+  // Convert **bold** to <strong>
+  let formatted = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  
+  // Convert bullet points
+  formatted = formatted.replace(/^[\s]*[-•]\s+/gm, "• ");
+  
+  return formatted;
+}
+
 export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "Hello! I'm the MORA AI Assistant. I can help you understand money behavior, explain finance concepts simply, suggest AI tools, or recommend videos based on your goals. What would you like to learn today?",
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [displayedText, setDisplayedText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,10 +41,17 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages, displayedText, isLoading]);
+
+  // Typewriter effect
+  useEffect(() => {
+    if (!isLoading && displayedText) {
+      scrollToBottom();
+    }
+  }, [displayedText, isLoading]);
 
   const handleSend = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -48,153 +59,237 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
       content: text,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput("");
-    setIsTyping(true);
+    setIsLoading(true);
+    setDisplayedText("");
 
     try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: messages.concat(userMessage).map(m => ({
+          messages: newMessages.map((m) => ({
             role: m.role,
-            content: m.content
-          }))
-        })
+            content: m.content,
+          })),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch response');
+        throw new Error("Failed to fetch response");
       }
 
-      const data = await response.json();
+      if (!response.body) {
+        throw new Error("No response body");
+      }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: data.content,
-        relatedVideos: suggestedVideos?.slice(0, 2), // We still mock related videos for MVP
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let charIndex = 0;
+
+      // Read the stream
+      const readStream = async () => {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const text = decoder.decode(value, { stream: true });
+          fullText += text;
+        }
       };
-      setMessages(prev => [...prev, assistantMessage]);
+
+      await readStream();
+
+      // Typewriter effect
+      const typewriter = () => {
+        if (charIndex < fullText.length) {
+          setDisplayedText(fullText.slice(0, charIndex + 1));
+          charIndex++;
+          typingIntervalRef.current = setTimeout(typewriter, 15); // Adjust speed here
+        } else {
+          setIsLoading(false);
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: fullText,
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
+          setDisplayedText("");
+        }
+      };
+
+      typewriter();
     } catch (error) {
       console.error(error);
+      setIsLoading(false);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Sorry, I encountered an error connecting to my brain. Please make sure you are signed in and have configured the OpenAI API key.",
+        content: "Sorry, I encountered an error. Please make sure you are signed in.",
       };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
+      setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
+  // Cleanup typewriter on unmount
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearTimeout(typingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const hasMessages = messages.length > 0 || isLoading || displayedText;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] glass rounded-3xl overflow-hidden border border-white/10">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-500">
-            <Bot className="w-5 h-5" />
+    <div className="w-full h-[calc(100vh-12rem)] flex flex-col bg-gradient-to-b from-[#141414] to-[#0A0A0A] rounded-3xl border border-[#2C2C2C] overflow-hidden">
+      {!hasMessages ? (
+        // Empty state
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#E53935] to-[#C62828] flex items-center justify-center mb-6">
+            <Bot className="w-10 h-10 text-white" />
           </div>
-          <div>
-            <h2 className="font-bold">MORA Assistant</h2>
-            <p className="text-xs text-green-400 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-400"></span> Online
-            </p>
-          </div>
-        </div>
-        <button className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition text-gray-300 flex items-center gap-1">
-          <Sparkles className="w-3 h-3" /> New Chat
-        </button>
-      </div>
+          <h2 className="text-2xl md:text-3xl font-black text-white mb-3 text-center">
+            Hi! I'm MORA Assistant
+          </h2>
+          <p className="text-[#999999] text-center max-w-md mb-8">
+            Ask me anything about money, investing, finance concepts, or AI tools.
+          </p>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex gap-4 max-w-3xl ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-              msg.role === 'user' ? 'bg-zinc-800' : 'bg-red-600'
-            }`}>
-              {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
-            </div>
-            
-            <div className="space-y-4 w-full">
-              <div className={`p-4 rounded-2xl ${
-                msg.role === 'user' 
-                  ? 'bg-zinc-800 text-white rounded-tr-sm' 
-                  : 'glass text-gray-200 rounded-tl-sm'
-              }`}>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-              </div>
-              
-              {msg.relatedVideos && msg.relatedVideos.length > 0 && (
-                <div className="grid sm:grid-cols-2 gap-4 mt-4">
-                  {msg.relatedVideos.map(video => (
-                    <div key={video.id} className="scale-95 origin-left">
-                      <VideoCard video={video} layout="grid" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-        
-        {isTyping && (
-          <div className="flex gap-4 max-w-3xl">
-            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-white" />
-            </div>
-            <div className="glass p-4 rounded-2xl rounded-tl-sm flex items-center gap-2 text-gray-400">
-              <Loader2 className="w-4 h-4 animate-spin text-red-500" /> 
-              <span className="text-sm">Thinking...</span>
-            </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="p-4 bg-black/40 border-t border-white/10">
-        {messages.length === 1 && (
-          <div className="flex flex-wrap gap-2 mb-4 justify-center">
-            {suggestedPrompts.map(prompt => (
-              <button 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
+            {suggestedPrompts.map((prompt) => (
+              <button
                 key={prompt}
                 onClick={() => handleSend(prompt)}
-                className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-full text-xs text-gray-300 transition"
+                className="px-4 py-3 bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl text-white text-sm font-medium hover:bg-[#252525] hover:border-[#E53935]/50 transition duration-300 text-left"
               >
                 {prompt}
               </button>
             ))}
           </div>
-        )}
-        
-        <form 
-          onSubmit={(e) => { e.preventDefault(); handleSend(input); }}
-          className="max-w-4xl mx-auto relative flex items-center"
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about money, AI, or growth..."
-            className="w-full bg-zinc-900 border border-white/10 focus:border-red-500/50 rounded-full pl-6 pr-14 py-4 outline-none transition"
-          />
-          <button 
-            type="submit"
-            disabled={!input.trim() || isTyping}
-            className="absolute right-2 bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 disabled:text-gray-500 text-white p-2.5 rounded-full transition"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
-        <p className="text-center text-[10px] text-gray-500 mt-3">
-          MORA AI can make mistakes. Remember this is for educational awareness, not financial advice.
-        </p>
-      </div>
+        </div>
+      ) : (
+        <>
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 scroll-smooth">
+            {messages.map((msg) => (
+              <div key={msg.id} className="flex gap-4 animate-fade-in">
+                {msg.role === "assistant" ? (
+                  <>
+                    <div className="w-8 h-8 rounded-full bg-[#E53935] flex items-center justify-center shrink-0 mt-1">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 max-w-4xl">
+                      <div className="bg-[#141414] border border-[#E53935]/20 rounded-2xl rounded-tl-sm p-4 text-[#E0E0E0] leading-relaxed">
+                        <div dangerouslySetInnerHTML={{ __html: formatAIText(msg.content) }} />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1 max-w-4xl flex justify-end">
+                      <div className="bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl rounded-tr-sm p-4 text-white leading-relaxed">
+                        {msg.content}
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 mt-1">
+                      <User className="w-4 h-4 text-gray-300" />
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+
+            {isLoading && displayedText && (
+              <div className="flex gap-4 animate-fade-in">
+                <div className="w-8 h-8 rounded-full bg-[#E53935] flex items-center justify-center shrink-0 mt-1">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1 max-w-4xl">
+                  <div className="bg-[#141414] border border-[#E53935]/20 rounded-2xl rounded-tl-sm p-4 text-[#E0E0E0] leading-relaxed">
+                    <div dangerouslySetInnerHTML={{ __html: formatAIText(displayedText) }} />
+                    <span className="inline-block w-2 h-5 bg-[#E53935] ml-1 animate-blink"></span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isLoading && !displayedText && (
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#E53935] flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-[#141414] border border-[#E53935]/20 rounded-2xl rounded-tl-sm p-4">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 rounded-full bg-[#E53935] animate-bounce" style={{ animationDelay: "0s" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-[#E53935] animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-[#E53935] animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input area - fixed at bottom with padding */}
+          <div className="px-6 py-4 border-t border-[#2C2C2C] bg-[#0A0A0A]">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend(input);
+              }}
+              className="max-w-4xl mx-auto flex gap-3"
+            >
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask something..."
+                disabled={isLoading}
+                className="flex-1 bg-[#1A1A1A] border border-[#2C2C2C] focus:border-[#E53935]/50 rounded-full px-6 py-3 text-white placeholder-[#666666] outline-none transition disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="bg-[#E53935] hover:bg-[#C62828] disabled:bg-[#333333] disabled:text-[#666666] text-white p-3 rounded-full transition disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+            <p className="text-center text-xs text-[#666666] mt-2">Press Enter to send</p>
+          </div>
+        </>
+      )}
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes blink {
+          0%, 50% {
+            opacity: 1;
+          }
+          51%, 100% {
+            opacity: 0;
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        .animate-blink {
+          animation: blink 1s infinite;
+        }
+      `}</style>
     </div>
   );
 }

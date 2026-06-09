@@ -7,14 +7,14 @@ export default async function AIAssistantPage() {
   const topVideos = suggestedVideos.slice(0, 4);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#0A0A0A] p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#0A0A0A] p-4 md:p-8 max-w-6xl mx-auto flex flex-col">
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black mb-2 flex items-center gap-3 text-white">
             <Bot className="w-8 h-8 text-[#E53935]" /> MORA Assistant
           </h1>
           <p className="text-[#999999] max-w-2xl">
-            Ask questions about finance, debt, AI tools, or money habits. The assistant searches our educational content to give you clear, simple answers and video recommendations.
+            Ask questions about finance, debt, AI tools, or money habits. The assistant provides clear, simple answers.
           </p>
         </div>
 
