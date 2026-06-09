@@ -18,7 +18,7 @@ const AI_TOOLS = [
     id: "2",
     name: "Groww",
     category: "Finance",
-    description: "Mutual fund investing and stocks made simple",
+    description: "Mutual funds and stock investing made simple",
     pricing: "Free",
     url: "https://groww.in",
     icon: "📈",
@@ -87,18 +87,9 @@ const AI_TOOLS = [
     url: "https://notion.so",
     icon: "📝",
   },
-  {
-    id: "10",
-    name: "Google Bard",
-    category: "AI",
-    description: "Market research and financial Q&A",
-    pricing: "Free",
-    url: "https://bard.google.com",
-    icon: "🧠",
-  },
   // Investing Tools
   {
-    id: "11",
+    id: "10",
     name: "Screener.in",
     category: "Investing",
     description: "Deep stock analysis and financial data",
@@ -107,7 +98,7 @@ const AI_TOOLS = [
     icon: "🔍",
   },
   {
-    id: "12",
+    id: "11",
     name: "Tijori Finance",
     category: "Investing",
     description: "Deep fundamental research platform",
@@ -116,7 +107,7 @@ const AI_TOOLS = [
     icon: "🏛️",
   },
   {
-    id: "13",
+    id: "12",
     name: "TradingView",
     category: "Investing",
     description: "Professional charts and technical analysis",
@@ -125,7 +116,7 @@ const AI_TOOLS = [
     icon: "📊",
   },
   {
-    id: "14",
+    id: "13",
     name: "Smallcase",
     category: "Investing",
     description: "Thematic investing in stock baskets",
@@ -134,7 +125,7 @@ const AI_TOOLS = [
     icon: "🧺",
   },
   {
-    id: "15",
+    id: "14",
     name: "Moneycontrol",
     category: "Investing",
     description: "Market news and portfolio tracker",
