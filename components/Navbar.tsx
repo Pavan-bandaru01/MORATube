@@ -279,62 +279,149 @@ export default function Navbar() {
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 top-12 w-64 bg-[#141414] border border-[#2C2C2C] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-[60]">
-                {/* User Info */}
-                <div className="px-4 py-4 border-b border-[#2C2C2C]">
-                  <p className="font-bold text-white">{user?.firstName}</p>
-                  <p className="text-xs text-[#999999] mt-1">{user?.emailAddresses[0]?.emailAddress}</p>
+              <div className="absolute right-0 top-12 w-80 bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-[60]">
+                {/* Header - User Info */}
+                <div className="px-4 py-4 border-b border-[#2C2C2C] bg-[#141414]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-[#E53935] text-white font-bold flex items-center justify-center text-lg">
+                      {user?.firstName?.[0] || "U"}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white text-sm">
+                        {user?.firstName} {user?.lastName}
+                      </h3>
+                      <p className="text-xs text-[#999999] mt-0.5">{user?.emailAddresses[0]?.emailAddress}</p>
+                      <span
+                        className={`inline-block text-[10px] font-bold px-2 py-1 rounded-full mt-1.5 ${
+                          userRole === "ADMIN"
+                            ? "bg-red-500/20 border border-red-500/30 text-red-400"
+                            : userRole === "CREATOR"
+                            ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
+                            : "bg-gray-500/20 border border-gray-500/30 text-gray-400"
+                        }`}
+                      >
+                        {userRole || "VIEWER"}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/channel/${user?.username}`}
+                    onClick={() => setShowUserMenu(false)}
+                    className="block mt-3 text-center text-xs font-bold text-[#E53935] hover:text-[#C62828] transition"
+                  >
+                    View Channel →
+                  </Link>
                 </div>
 
-                {/* Menu Items */}
-                <div className="py-2">
+                {/* Creator Section */}
+                {(userRole === "CREATOR" || userRole === "ADMIN") && (
+                  <>
+                    <div className="py-2 px-2 border-b border-[#2C2C2C]">
+                      <p className="text-[10px] text-[#666666] font-bold uppercase px-2 py-1.5">Creator</p>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
+                      >
+                        <span>🎬</span>
+                        Creator Studio
+                      </Link>
+                      <Link
+                        href="/upload"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
+                      >
+                        <span>📤</span>
+                        Upload Content
+                      </Link>
+                    </div>
+                  </>
+                )}
+
+                {/* Account Section */}
+                <div className="py-2 px-2 border-b border-[#2C2C2C]">
+                  <p className="text-[10px] text-[#666666] font-bold uppercase px-2 py-1.5">Account</p>
                   <Link
                     href="/profile"
                     onClick={() => setShowUserMenu(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
                   >
-                    <User className="w-4 h-4" />
+                    <span>👤</span>
                     My Profile
                   </Link>
-
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setShowUserMenu(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
+                  <button
+                    onClick={() => {
+                      setShowNotifications(!showNotifications);
+                      setShowUserMenu(false);
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition w-full text-left relative"
                   >
-                    <LayoutDashboard className="w-4 h-4" />
-                    Dashboard
+                    <span>🔔</span>
+                    Notifications
+                    {unreadCount > 0 && (
+                      <span className="ml-auto text-xs bg-[#E53935] text-white px-2 py-1 rounded-full font-bold">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  <Link
+                    href="/history"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
+                  >
+                    <span>📚</span>
+                    My Library
                   </Link>
+                </div>
 
-                  {userRole === "VIEWER" && (
-                    <Link
-                      href="/dashboard/upgrade"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
-                    >
-                      <Crown className="w-4 h-4 text-yellow-400" />
-                      Upgrade to Creator
-                    </Link>
-                  )}
+                {/* Settings Section */}
+                <div className="py-2 px-2 border-b border-[#2C2C2C]">
+                  <p className="text-[10px] text-[#666666] font-bold uppercase px-2 py-1.5">Settings</p>
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
+                  >
+                    <span>⚙️</span>
+                    Account Settings
+                  </Link>
+                  <div className="flex items-center justify-between px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition cursor-not-allowed opacity-60">
+                    <div className="flex items-center gap-3">
+                      <span>🎨</span>
+                      Appearance
+                    </div>
+                    <span className="text-xs text-[#666666]">Coming soon</span>
+                  </div>
+                </div>
 
-                  {userRole === "ADMIN" && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-white hover:bg-[#1F1F1F] transition"
-                    >
-                      <Shield className="w-4 h-4 text-purple-400" />
-                      Admin Panel
-                    </Link>
-                  )}
+                {/* Support Section */}
+                <div className="py-2 px-2 border-b border-[#2C2C2C]">
+                  <p className="text-[10px] text-[#666666] font-bold uppercase px-2 py-1.5">Support</p>
+                  <a
+                    href="mailto:help@fingrowth.online"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
+                  >
+                    <span>❓</span>
+                    Help & Support
+                  </a>
+                  <a
+                    href="https://fingrowth.online"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-white hover:bg-[#252525] rounded-lg transition"
+                  >
+                    <span>ℹ️</span>
+                    About MORATube
+                  </a>
+                </div>
 
-                  {/* Divider */}
-                  <div className="border-t border-[#2C2C2C] my-2" />
-
-                  {/* Sign Out */}
+                {/* Sign Out */}
+                <div className="py-2 px-2">
                   <SignOutButton>
-                    <button className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition w-full">
-                      <LogOut className="w-4 h-4" />
+                    <button className="flex items-center justify-center gap-3 w-full px-3 py-2.5 text-sm text-white bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 rounded-lg transition font-semibold">
+                      <span>🚪</span>
                       Sign Out
                     </button>
                   </SignOutButton>
