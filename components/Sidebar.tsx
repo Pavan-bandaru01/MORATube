@@ -48,11 +48,11 @@ export default function Sidebar() {
           href={link.href}
           className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
             isActive
-              ? "bg-[#1F1F1F] text-white font-semibold"
-              : "text-[#999999] hover:bg-[#1F1F1F] hover:text-white"
+              ? "bg-[#16181C] text-white font-semibold"
+              : "text-[#71767B] hover:bg-[#16181C] hover:text-white"
           }`}
         >
-          <link.icon className={`w-5 h-5 ${isActive ? "text-[#E53935]" : ""}`} />
+          <link.icon className={`w-5 h-5 ${isActive ? "text-white" : ""}`} />
           <span>{link.name}</span>
         </Link>
       );
@@ -60,7 +60,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed top-16 left-0 bottom-0 hidden md:flex flex-col w-64 bg-[#0A0A0A] border-r border-[#2C2C2C] overflow-y-auto hide-scrollbar z-40">
+    <aside className="fixed top-16 left-0 bottom-0 hidden md:flex flex-col w-64 bg-[#000000] border-r border-[#2F3336] overflow-y-auto hide-scrollbar z-40">
       <div className="flex-1 py-6 px-3 space-y-8">
         <nav className="space-y-1">{renderLinks(mainLinks)}</nav>
 
@@ -72,18 +72,18 @@ export default function Sidebar() {
         </div>
 
         <div>
-          <h3 className="px-4 text-sm font-semibold text-[#666666] mb-2 uppercase tracking-wider">
+          <h3 className="px-4 text-sm font-semibold text-[#71767B] mb-2 uppercase tracking-wider">
             You
           </h3>
           <nav className="space-y-1">{renderLinks(userLinks)}</nav>
         </div>
       </div>
 
-      <div className="p-6 border-t border-[#2C2C2C] text-xs text-[#666666] font-medium">
-        <p className="mb-2 hover:text-[#999999] cursor-pointer transition">
+      <div className="p-6 border-t border-[#2F3336] text-xs text-[#71767B] font-medium">
+        <p className="mb-2 hover:text-white cursor-pointer transition">
           About • Press • Copyright
         </p>
-        <p className="mb-4 hover:text-[#999999] cursor-pointer transition">
+        <p className="mb-4 hover:text-white cursor-pointer transition">
           Terms • Privacy • Policy
         </p>
         <p>© 2026 MORA Tube LLC</p>

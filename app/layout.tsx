@@ -19,10 +19,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="dark">
-        <body className="antialiased min-h-screen flex flex-col bg-[#0A0A0A] text-white selection:bg-[#E53935] selection:text-white">
+        <body className="antialiased min-h-screen flex flex-col bg-[#000000] text-white selection:bg-white selection:text-black">
           <Navbar />
           
-          <div className="flex flex-1 pt-16">
+            <div className="flex flex-1 pt-16 bg-[#000000]">
             <Sidebar />
             
             <main className="flex-1 md:pl-64 min-w-0">

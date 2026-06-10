@@ -145,17 +145,17 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
   const hasMessages = messages.length > 0 || isLoading || displayedText;
 
   return (
-    <div className="w-full h-[calc(100vh-12rem)] flex flex-col bg-gradient-to-b from-[#141414] to-[#0A0A0A] rounded-3xl border border-[#2C2C2C] overflow-hidden">
+    <div className="w-full h-[calc(100vh-12rem)] flex flex-col bg-gradient-to-b from-[#0F0F0F] to-[#000000] rounded-3xl border border-[#2F3336] overflow-hidden">
       {!hasMessages ? (
         // Empty state
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#E53935] to-[#C62828] flex items-center justify-center mb-6">
-            <Bot className="w-10 h-10 text-white" />
+          <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-6">
+            <Bot className="w-10 h-10 text-black" />
           </div>
           <h2 className="text-2xl md:text-3xl font-black text-white mb-3 text-center">
             Hi! I'm MORA Assistant
           </h2>
-          <p className="text-[#999999] text-center max-w-md mb-8">
+          <p className="text-[#71767B] text-center max-w-md mb-8">
             Ask me anything about money, investing, finance concepts, or AI tools.
           </p>
 
@@ -164,7 +164,7 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
               <button
                 key={prompt}
                 onClick={() => handleSend(prompt)}
-                className="px-4 py-3 bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl text-white text-sm font-medium hover:bg-[#252525] hover:border-[#E53935]/50 transition duration-300 text-left"
+                className="px-4 py-3 bg-[#0F0F0F] border border-[#2F3336] rounded-2xl text-white text-sm font-medium hover:bg-[#16181C] hover:border-white/30 transition duration-300 text-left"
               >
                 {prompt}
               </button>
@@ -179,11 +179,11 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
               <div key={msg.id} className="flex gap-4 animate-fade-in">
                 {msg.role === "assistant" ? (
                   <>
-                    <div className="w-8 h-8 rounded-full bg-[#E53935] flex items-center justify-center shrink-0 mt-1">
-                      <Bot className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 mt-1">
+                      <Bot className="w-4 h-4 text-black" />
                     </div>
                     <div className="flex-1 max-w-4xl">
-                      <div className="bg-[#141414] border border-[#E53935]/20 rounded-2xl rounded-tl-sm p-4 text-[#E0E0E0] leading-relaxed">
+                      <div className="bg-[#0F0F0F] border border-[#2F3336] rounded-2xl rounded-tl-sm p-4 text-[#E0E0E0] leading-relaxed">
                         <div dangerouslySetInnerHTML={{ __html: formatAIText(msg.content) }} />
                       </div>
                     </div>
@@ -191,7 +191,7 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
                 ) : (
                   <>
                     <div className="flex-1 max-w-4xl flex justify-end">
-                      <div className="bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl rounded-tr-sm p-4 text-white leading-relaxed">
+                      <div className="bg-[#16181C] border border-[#2F3336] rounded-2xl rounded-tr-sm p-4 text-white leading-relaxed">
                         {msg.content}
                       </div>
                     </div>
@@ -205,13 +205,13 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
 
             {isLoading && displayedText && (
               <div className="flex gap-4 animate-fade-in">
-                <div className="w-8 h-8 rounded-full bg-[#E53935] flex items-center justify-center shrink-0 mt-1">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 mt-1">
+                  <Bot className="w-4 h-4 text-black" />
                 </div>
                 <div className="flex-1 max-w-4xl">
-                  <div className="bg-[#141414] border border-[#E53935]/20 rounded-2xl rounded-tl-sm p-4 text-[#E0E0E0] leading-relaxed">
+                  <div className="bg-[#0F0F0F] border border-[#2F3336] rounded-2xl rounded-tl-sm p-4 text-[#E0E0E0] leading-relaxed">
                     <div dangerouslySetInnerHTML={{ __html: formatAIText(displayedText) }} />
-                    <span className="inline-block w-2 h-5 bg-[#E53935] ml-1 animate-blink"></span>
+                    <span className="inline-block w-2 h-5 bg-white ml-1 animate-blink"></span>
                   </div>
                 </div>
               </div>
@@ -219,14 +219,14 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
 
             {isLoading && !displayedText && (
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-[#E53935] flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-[#141414] border border-[#E53935]/20 rounded-2xl rounded-tl-sm p-4">
+                <div className="bg-[#0F0F0F] border border-[#2F3336] rounded-2xl rounded-tl-sm p-4">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#E53935] animate-bounce" style={{ animationDelay: "0s" }}></div>
-                    <div className="w-2 h-2 rounded-full bg-[#E53935] animate-bounce" style={{ animationDelay: "0.2s" }}></div>
-                    <div className="w-2 h-2 rounded-full bg-[#E53935] animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: "0s" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-white animate-bounce" style={{ animationDelay: "0.4s" }}></div>
                   </div>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
           </div>
 
           {/* Input area - fixed at bottom with padding */}
-          <div className="px-6 py-4 border-t border-[#2C2C2C] bg-[#0A0A0A]">
+          <div className="px-6 py-4 border-t border-[#2F3336] bg-[#000000]">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -249,17 +249,17 @@ export default function AIChat({ suggestedVideos }: { suggestedVideos?: Video[] 
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask something..."
                 disabled={isLoading}
-                className="flex-1 bg-[#1A1A1A] border border-[#2C2C2C] focus:border-[#E53935]/50 rounded-full px-6 py-3 text-white placeholder-[#666666] outline-none transition disabled:opacity-50"
+                className="flex-1 bg-[#16181C] border border-[#2F3336] focus:border-white rounded-full px-6 py-3 text-white placeholder-[#71767B] outline-none transition disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="bg-[#E53935] hover:bg-[#C62828] disabled:bg-[#333333] disabled:text-[#666666] text-white p-3 rounded-full transition disabled:cursor-not-allowed flex items-center justify-center"
+                className="bg-white hover:bg-[#E0E0E0] disabled:bg-[#2F3336] disabled:text-[#71767B] text-black p-3 rounded-full transition disabled:cursor-not-allowed flex items-center justify-center"
               >
                 <Send className="w-5 h-5" />
               </button>
             </form>
-            <p className="text-center text-xs text-[#666666] mt-2">Press Enter to send</p>
+            <p className="text-center text-xs text-[#71767B] mt-2">Press Enter to send</p>
           </div>
         </>
       )}
