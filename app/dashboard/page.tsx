@@ -59,10 +59,33 @@ export default async function DashboardPage() {
           <p className="text-2xl font-bold">{myVideos.length}</p>
         </div>
         <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-          <p className="text-gray-400 text-sm">Role</p>
-          <p className="text-2xl font-bold">{profile.role}</p>
+          <p className="text-gray-400 text-sm">Subscribers</p>
+          <p className="text-2xl font-bold">{profile.followers.length}</p>
         </div>
       </div>
+
+      {/* My Channel Card */}
+      {profile.role === "CREATOR" || profile.role === "ADMIN" ? (
+        <div className="bg-gradient-to-r from-red-600/10 to-red-900/10 rounded-3xl p-6 border border-red-500/20 mb-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-2">My Channel</h2>
+              <div className="space-y-1 text-sm text-gray-300">
+                <p>@{profile.username}</p>
+                <p>{profile.followers.length} subscribers • {myVideos.length} videos</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                href={`/channel/${profile.username}`}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full font-bold transition flex items-center gap-2"
+              >
+                👁️ View Channel
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="bg-white/5 rounded-3xl p-6 border border-white/10">
         <div className="flex items-center justify-between mb-6">
