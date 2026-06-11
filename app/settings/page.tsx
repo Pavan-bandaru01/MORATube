@@ -104,7 +104,7 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">
-            <Settings className="w-8 h-8 text-[#E53935]" />
+            <Settings className="w-8 h-8 text-white" />
             <h1 className="text-4xl md:text-5xl font-black text-white">Settings</h1>
           </div>
           <p className="text-[#999999] text-lg">Manage your account preferences and settings</p>
@@ -151,7 +151,7 @@ export default function SettingsPage() {
                 placeholder="Tell us about yourself"
                 rows={4}
                 maxLength={500}
-                className="w-full bg-[#1A1A1A] border border-[#2C2C2C] focus:border-[#E53935]/50 rounded-xl px-4 py-3 text-white placeholder-[#666666] outline-none transition resize-none"
+                className="w-full bg-[#16181C] border border-[#2F3336] focus:border-white rounded-xl px-4 py-3 text-white placeholder-[#71767B] outline-none transition resize-none"
               />
               <p className="text-xs text-[#666666] mt-1">{profile.bio.length}/500 characters</p>
             </div>
@@ -172,7 +172,7 @@ export default function SettingsPage() {
             <button
               onClick={handleSaveProfile}
               disabled={isSaving}
-              className="w-full bg-[#E53935] hover:bg-[#C62828] disabled:bg-[#666666] text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
+              className="w-full bg-white hover:bg-[#E0E0E0] disabled:bg-[#2F3336] text-black font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               {isSaving ? "Saving..." : "Save Profile"}
@@ -238,15 +238,15 @@ export default function SettingsPage() {
                   }
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-[#2C2C2C] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#E53935]"></div>
+                <div className="w-11 h-6 bg-[#2F3336] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
               </label>
             </div>
 
             {/* New Followers */}
-            <div className="flex items-center justify-between p-4 bg-[#1A1A1A] rounded-lg border border-[#2C2C2C]">
+            <div className="flex items-center justify-between p-4 bg-[#0F0F0F] rounded-lg border border-[#2F3336]\">
               <div>
-                <p className="text-white font-semibold">New Followers</p>
-                <p className="text-xs text-[#666666] mt-1">Notify when someone follows you</p>
+                <p className="text-white font-semibold\">New Followers</p>
+                <p className=\"text-xs text-[#71767B] mt-1\">Notify when someone follows you</p>
               </div>
               <label className="relative inline-flex cursor-pointer">
                 <input

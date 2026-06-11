@@ -1,0 +1,57 @@
+[1mdiff --git a/app/settings/page.tsx b/app/settings/page.tsx[m
+[1mindex 094e6db..374ec86 100644[m
+[1m--- a/app/settings/page.tsx[m
+[1m+++ b/app/settings/page.tsx[m
+[36m@@ -104,7 +104,7 @@[m [mexport default function SettingsPage() {[m
+         {/* Header */}[m
+         <div className="mb-10">[m
+           <div className="flex items-center gap-3 mb-4">[m
+[31m-            <Settings className="w-8 h-8 text-[#E53935]" />[m
+[32m+[m[32m            <Settings className="w-8 h-8 text-white" />[m
+             <h1 className="text-4xl md:text-5xl font-black text-white">Settings</h1>[m
+           </div>[m
+           <p className="text-[#999999] text-lg">Manage your account preferences and settings</p>[m
+[36m@@ -151,7 +151,7 @@[m [mexport default function SettingsPage() {[m
+                 placeholder="Tell us about yourself"[m
+                 rows={4}[m
+                 maxLength={500}[m
+[31m-                className="w-full bg-[#1A1A1A] border border-[#2C2C2C] focus:border-[#E53935]/50 rounded-xl px-4 py-3 text-white placeholder-[#666666] outline-none transition resize-none"[m
+[32m+[m[32m                className="w-full bg-[#16181C] border border-[#2F3336] focus:border-white rounded-xl px-4 py-3 text-white placeholder-[#71767B] outline-none transition resize-none"[m
+               />[m
+               <p className="text-xs text-[#666666] mt-1">{profile.bio.length}/500 characters</p>[m
+             </div>[m
+[36m@@ -172,7 +172,7 @@[m [mexport default function SettingsPage() {[m
+             <button[m
+               onClick={handleSaveProfile}[m
+               disabled={isSaving}[m
+[31m-              className="w-full bg-[#E53935] hover:bg-[#C62828] disabled:bg-[#666666] text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"[m
+[32m+[m[32m              className="w-full bg-white hover:bg-[#E0E0E0] disabled:bg-[#2F3336] text-black font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"[m
+             >[m
+               <Save className="w-4 h-4" />[m
+               {isSaving ? "Saving..." : "Save Profile"}[m
+[36m@@ -238,15 +238,15 @@[m [mexport default function SettingsPage() {[m
+                   }[m
+                   className="sr-only peer"[m
+                 />[m
+[31m-                <div className="w-11 h-6 bg-[#2C2C2C] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#E53935]"></div>[m
+[32m+[m[32m                <div className="w-11 h-6 bg-[#2F3336] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>[m
+               </label>[m
+             </div>[m
+ [m
+             {/* New Followers */}[m
+[31m-            <div className="flex items-center justify-between p-4 bg-[#1A1A1A] rounded-lg border border-[#2C2C2C]">[m
+[32m+[m[32m            <div className="flex items-center justify-between p-4 bg-[#0F0F0F] rounded-lg border border-[#2F3336]\">[m
+               <div>[m
+[31m-                <p className="text-white font-semibold">New Followers</p>[m
+[31m-                <p className="text-xs text-[#666666] mt-1">Notify when someone follows you</p>[m
+[32m+[m[32m                <p className="text-white font-semibold\">New Followers</p>[m
+[32m+[m[32m                <p className=\"text-xs text-[#71767B] mt-1\">Notify when someone follows you</p>[m
+               </div>[m
+               <label className="relative inline-flex cursor-pointer">[m
+                 <input[m
+[36m@@ -370,3 +370,4 @@[m [mexport default function SettingsPage() {[m
+     </div>[m
+   );[m
+ }[m
+[32m+[m[32mn[m
+\ No newline at end of file[m
